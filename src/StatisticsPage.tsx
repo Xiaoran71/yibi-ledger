@@ -25,7 +25,6 @@ function RingChart({ data, onSelect, callouts }: { data: ChartItem[]; onSelect?:
 function Composition({ title, type, items, categories }: { title: string; type: TransactionType; items: Transaction[]; categories: Category[] }) {
   const [calloutsOpen,setCalloutsOpen]=useState(false)
   const [selectedParent,setSelectedParent]=useState<string>()
-  const [allSecondary,setAllSecondary]=useState(false)
   const categoryMap=new Map(categories.map((c)=>[c.id,c]))
   const fallback=type==='expense'?'#B8685A':'#2F6F57'
   const aggregate=(resolve:(item:Transaction)=>{id:string;name:string;color:string}|null) => {
@@ -34,14 +33,14 @@ function Composition({ title, type, items, categories }: { title: string; type: 
     return [...map.values()].sort((a,b)=>b.value-a.value)
   }
   const primary=aggregate((item)=>{const selected=categoryMap.get(item.categoryId);const root=selected?.parentId?categoryMap.get(selected.parentId):selected;return {id:root?.id??item.categoryId,name:root?.name??'已删除分类',color:root?.color??fallback}})
-  const secondary=aggregate((item)=>{const selected=categoryMap.get(item.categoryId);if(selectedParent){const root=selected?.parentId?categoryMap.get(selected.parentId):selected;if(root?.id!==selectedParent)return null;return selected?.parentId?{id:selected.id,name:selected.name,color:selected.color}:{id:`${selectedParent}-direct`,name:'未细分',color:`${selected?.color??fallback}99`}}if(allSecondary)return selected?.parentId?{id:selected.id,name:selected.name,color:selected.color}:{id:`${item.categoryId}-direct`,name:`${selected?.name??'已删除分类'} · 未细分`,color:`${selected?.color??fallback}99`};return null})
-  const data=selectedParent||allSecondary?secondary:primary
+  const secondary=aggregate((item)=>{const selected=categoryMap.get(item.categoryId);if(!selectedParent)return null;const root=selected?.parentId?categoryMap.get(selected.parentId):selected;if(root?.id!==selectedParent)return null;return selected?.parentId?{id:selected.id,name:selected.name,color:selected.color}:{id:`${selectedParent}-direct`,name:'未细分',color:`${selected?.color??fallback}99`}})
+  const data=selectedParent?secondary:primary
   const total=data.reduce((sum,item)=>sum+item.value,0)
   const canShowSecondary=categories.some((c)=>c.type===type&&c.parentId)
-  const drill=(id:string)=>{if(!selectedParent&&!allSecondary&&categories.some((c)=>c.parentId===id))setSelectedParent(id)}
-  const heading=selectedParent?`${categoryMap.get(selectedParent)?.name??''} · 二级分类`:allSecondary?'全部二级分类':title
+  const drill=(id:string)=>{if(!selectedParent&&categories.some((c)=>c.parentId===id))setSelectedParent(id)}
+  const heading=selectedParent?`${categoryMap.get(selectedParent)?.name??''} · 二级分类`:title
   if (!total) return <section className="stats-card"><div className="stats-card-title"><h3>{heading}</h3></div><p className="muted">这个时期还没有数据</p></section>
-  return <section className="stats-card"><div className="stats-card-title"><h3>{heading}</h3><button className={calloutsOpen?'legend-toggle open':'legend-toggle'} onClick={()=>setCalloutsOpen(!calloutsOpen)} aria-label={calloutsOpen?'隐藏饼图分类标注':'显示饼图分类标注'}><Icon name="plus" size={16}/></button></div>{canShowSecondary&&<div className="chart-view-actions">{(selectedParent||allSecondary)&&<button onClick={()=>{setSelectedParent(undefined);setAllSecondary(false)}}>一级分类</button>}<button className={allSecondary?'active':''} onClick={()=>{setSelectedParent(undefined);setAllSecondary(!allSecondary)}}>全部二级</button></div>}<div className={calloutsOpen?'composition callouts-open':'composition'}><RingChart data={data} onSelect={!selectedParent&&!allSecondary?drill:undefined} callouts={calloutsOpen}/><div className="legend">{data.map((item)=>{const canDrill=!selectedParent&&!allSecondary&&categories.some((c)=>c.parentId===item.id);return <button disabled={!canDrill} onClick={()=>canDrill&&drill(item.id)} key={item.id}><i style={{background:item.color}}/><span>{item.name}</span><strong>{Math.round(item.value/total*100)}%</strong></button>})}</div></div>{!selectedParent&&!allSecondary&&canShowSecondary&&<p className="chart-hint">点按有二级分类的扇区或名称可查看明细</p>}</section>
+  return <section className="stats-card"><div className="stats-card-title"><h3>{heading}</h3><button className={calloutsOpen?'legend-toggle open':'legend-toggle'} onClick={()=>setCalloutsOpen(!calloutsOpen)} aria-label={calloutsOpen?'隐藏饼图分类标注':'显示饼图分类标注'}><Icon name="plus" size={16}/></button></div>{selectedParent&&<div className="chart-view-actions"><button onClick={()=>setSelectedParent(undefined)}>一级分类</button></div>}<div className={calloutsOpen?'composition callouts-open':'composition'}><RingChart data={data} onSelect={!selectedParent?drill:undefined} callouts={calloutsOpen}/><div className="legend">{data.map((item)=>{const canDrill=!selectedParent&&categories.some((c)=>c.parentId===item.id);return <button disabled={!canDrill} onClick={()=>canDrill&&drill(item.id)} key={item.id}><i style={{background:item.color}}/><span>{item.name}</span><strong>{Math.round(item.value/total*100)}%</strong></button>})}</div></div>{!selectedParent&&canShowSecondary&&<p className="chart-hint">点按有二级分类的扇区或名称可查看明细</p>}</section>
 }
 
 export function StatisticsPage({ transactions, categories }: { transactions: Transaction[]; categories: Category[] }) {

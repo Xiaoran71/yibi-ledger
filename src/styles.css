@@ -14,7 +14,6 @@
 .legend-toggle:focus-visible{outline:none}
 .chart-view-actions{display:flex;gap:7px;margin:8px 0 4px}
 .chart-view-actions button{border:0;background:#f0f0ed;color:var(--muted);border-radius:14px;padding:5px 9px;font-size:10px}
-.chart-view-actions button.active{background:var(--green-soft);color:var(--green)}
 .composition{margin-top:9px}
 .ring-chart circle{transition:opacity .15s}
 .ring-chart circle.selectable{cursor:pointer}
