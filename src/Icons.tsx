@@ -23,7 +23,21 @@ const paths: Record<string, ReactNode> = {
   gift: <><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M12 9v12M2 5h20v4H2V5Zm10 0c-1-4-6-4-6-1 0 2 3 1 6 1Zm0 0c1-4 6-4 6-1 0 2-3 1-6 1Z"/></>,
   laptop: <><rect x="4" y="4" width="16" height="12" rx="2"/><path d="M2 20h20M8 20l1-4h6l1 4"/></>,
   heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>,
+  coffee: <><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17M7 3v2m4-2v2m4-2v2"/></>,
+  cart: <><path d="M3 4h2l2 12h10l3-8H6"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></>,
+  plane: <path d="m22 2-9 20-2-9-9-2L22 2Zm-11 11 5-5"/>,
+  game: <><path d="M8 7h8a5 5 0 0 1 4.7 3.3l1.1 3.4A3.2 3.2 0 0 1 16.5 17L14 15h-4l-2.5 2a3.2 3.2 0 0 1-5.3-3.3l1.1-3.4A5 5 0 0 1 8 7Z"/><path d="M7 10v4m-2-2h4m8-1h.01m2 2h.01"/></>,
+  phone: <><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4"/></>,
+  shirt: <path d="m8 4-5 3 3 5 2-1v10h8V11l2 1 3-5-5-3a4 4 0 0 1-8 0Z"/>,
+  paw: <><circle cx="12" cy="15" r="4"/><circle cx="6" cy="10" r="2"/><circle cx="10" cy="6" r="2"/><circle cx="16" cy="6" r="2"/><circle cx="19" cy="11" r="2"/></>,
+  music: <><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></>,
+  camera: <><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="4"/><path d="m8 6 1.5-3h5L16 6"/></>,
+  coin: <><circle cx="12" cy="12" r="9"/><path d="M15 8.5c-.7-.7-1.7-1-3-1-1.7 0-3 .8-3 2s1 1.8 3 2.5 3 1.3 3 2.5-1.3 2-3 2c-1.3 0-2.5-.4-3.2-1.2M12 5v14"/></>,
+  building: <><path d="M4 21V3h12v18M16 9h4v12M8 7h4m-4 4h4m-4 4h4M2 21h20"/></>,
+  leaf: <><path d="M20 4C11 4 5 8 5 15a5 5 0 0 0 5 5c7 0 10-7 10-16Z"/><path d="M4 21c3-6 7-9 12-12"/></>,
 }
+
+export const categoryIconNames = ['fork','coffee','bus','plane','bag','cart','shirt','house','sparkles','game','music','camera','cross','book','phone','paw','briefcase','gift','laptop','chart','coin','building','heart','leaf','ellipsis']
 
 paths.chart = <><path d="M4 20V10m6 10V4m6 16v-7m5 7H2"/></>
 

@@ -17,7 +17,7 @@ export function Ledger({ transactions, categories, onBack, onOpen, onDelete }: {
     const category = categories.find((c) => c.id === item.categoryId)
     return (!filters.search || item.note.toLowerCase().includes(filters.search.toLowerCase()) || category?.name.includes(filters.search))
       && (filters.type === 'all' || item.type === filters.type)
-      && (!filters.categoryId || item.categoryId === filters.categoryId)
+      && (!filters.categoryId || item.categoryId === filters.categoryId || category?.parentId === filters.categoryId)
       && (!filters.dateFrom || item.localDate >= filters.dateFrom)
       && (!filters.dateTo || item.localDate <= filters.dateTo)
   }), [transactions, categories, filters])
@@ -32,7 +32,7 @@ export function Ledger({ transactions, categories, onBack, onOpen, onDelete }: {
     {selecting && <div className="selection-bar"><button disabled={!selected.size} onClick={() => setConfirmDelete(true)}>删除 {selected.size || ''}</button></div>}
 
     {filterOpen && <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setFilterOpen(false)}><div className="sheet filter-sheet"><div className="sheet-handle"/><h2>筛选账单</h2><label>类型</label><div className="segmented">{(['all','expense','income'] as const).map((type) => <button className={filters.type === type ? 'active' : ''} key={type} onClick={() => setFilters({ ...filters, type, categoryId: '' })}>{type === 'all' ? '全部' : type === 'expense' ? '支出' : '收入'}</button>)}</div>
-      <label>分类</label><select value={filters.categoryId} onChange={(e) => setFilters({ ...filters, categoryId: e.target.value })}><option value="">全部分类</option>{categories.filter((c) => !c.archived && (filters.type === 'all' || c.type === filters.type)).map((c) => <option value={c.id} key={c.id}>{c.name}</option>)}</select>
+      <label>分类</label><select value={filters.categoryId} onChange={(e) => setFilters({ ...filters, categoryId: e.target.value })}><option value="">全部分类</option>{categories.filter((c) => !c.archived && (filters.type === 'all' || c.type === filters.type)).sort((a,b)=>(a.parentId?1:0)-(b.parentId?1:0)||a.sortOrder-b.sortOrder).map((c) => <option value={c.id} key={c.id}>{c.parentId?'　↳ ':''}{c.name}</option>)}</select>
       <label>日期范围</label><div className="date-range"><input type="date" value={filters.dateFrom} onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}/><span>至</span><input type="date" value={filters.dateTo} onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}/></div>
       <button className="primary-button" onClick={() => setFilterOpen(false)}>查看 {filtered.length} 笔账单</button></div></div>}
     {confirmDelete && <ConfirmSheet title="删除所选账目？" message={`将删除 ${selected.size} 笔账目，此操作无法撤销。`} confirmLabel="删除" danger onCancel={() => setConfirmDelete(false)} onConfirm={async () => { await onDelete([...selected]); setConfirmDelete(false); setSelecting(false); setSelected(new Set()) }}/>} 
