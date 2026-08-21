@@ -24,6 +24,7 @@ export function EntryFlow({ categories, initial, copy = false, onClose, onSave }
     note: initial.note,
   } : { amountMinor: 0, amountText: '', occurredAt: now, note: '' })
   const [dateOpen, setDateOpen] = useState(false)
+  const [categoryParentId, setCategoryParentId] = useState<string>()
   const [saving, setSaving] = useState(false)
   const amountRef = useRef<HTMLInputElement>(null)
   const noteRef = useRef<HTMLInputElement>(null)
@@ -33,16 +34,22 @@ export function EntryFlow({ categories, initial, copy = false, onClose, onSave }
     return () => window.clearTimeout(timer)
   }, [step])
 
-  const visibleCategories = useMemo(() => categories.filter((c) => !c.archived && c.type === draft.type).sort((a, b) => a.sortOrder - b.sortOrder), [categories, draft.type])
+  const visibleCategories = useMemo(() => categories.filter((c) => !c.archived && c.type === draft.type && (c.parentId ?? '') === (categoryParentId ?? '')).sort((a, b) => a.sortOrder - b.sortOrder), [categories, draft.type, categoryParentId])
   const steps: Step[] = ['amount', 'type', 'category', 'note']
   const back = () => {
+    if (step === 'category' && categoryParentId) { setCategoryParentId(undefined); return }
     const index = steps.indexOf(step)
     if (index === 0) onClose()
     else setStep(steps[index - 1])
   }
   const chooseType = (type: TransactionType) => {
     setDraft((current) => ({ ...current, type, categoryId: current.type === type ? current.categoryId : undefined }))
+    setCategoryParentId(undefined)
     setStep('category')
+  }
+  const chooseCategory = (category: Category) => {
+    if (!category.parentId && categories.some((item) => !item.archived && item.parentId === category.id)) { setCategoryParentId(category.id); return }
+    setDraft((current) => ({ ...current, categoryId: category.id })); setStep('note')
   }
   const save = async () => {
     if (!draft.amountMinor || !draft.type || !draft.categoryId || saving) return
@@ -86,12 +93,13 @@ export function EntryFlow({ categories, initial, copy = false, onClose, onSave }
         <button className="income" onClick={() => chooseType('income')}><span>＋</span><strong>收入</strong></button>
       </div></section>}
 
-      {step === 'category' && <section className="entry-step category-step"><p className="eyebrow">选择分类</p><h2>{draft.type === 'expense' ? '花在了哪里？' : '收入来自哪里？'}</h2><div className="category-grid">
-        {visibleCategories.map((category) => <button key={category.id} onClick={() => { setDraft((current) => ({ ...current, categoryId: category.id })); setStep('note') }}><span className={draft.type}><Icon name={category.icon} /></span><strong>{category.name}</strong></button>)}
+      {step === 'category' && <section className="entry-step category-step"><p className="eyebrow">{categoryParentId?'选择二级分类':'选择分类'}</p><h2>{categoryParentId?categories.find((c)=>c.id===categoryParentId)?.name:draft.type === 'expense' ? '花在了哪里？' : '收入来自哪里？'}</h2><div className="category-grid">
+        {categoryParentId&&(()=>{const parent=categories.find((c)=>c.id===categoryParentId);return parent?<button className="parent-category-choice" onClick={()=>chooseCategory({...parent,parentId:'direct'})}><span className={draft.type}><Icon name={parent.icon}/></span><strong>直接记到{parent.name}</strong></button>:null})()}
+        {visibleCategories.map((category) => <button key={category.id} onClick={() => chooseCategory(category)}><span className={draft.type}><Icon name={category.icon} /></span><strong>{category.name}</strong></button>)}
       </div></section>}
 
       {step === 'note' && <section className="entry-step note-step"><p className="eyebrow">最后一步 · 可选</p><h2>写点备注</h2><input ref={noteRef} value={draft.note} onChange={(event) => setDraft((current) => ({ ...current, note: event.target.value.slice(0, 100) }))} placeholder="例如：午饭" enterKeyHint="done" onKeyDown={(event) => event.key === 'Enter' && save()} />
-        <div className="entry-summary"><span>{draft.type === 'expense' ? '支出' : '收入'} · {categories.find((c) => c.id === draft.categoryId)?.name}</span><strong>¥{(draft.amountMinor / 100).toFixed(2)}</strong></div>
+        <div className="entry-summary"><span>{draft.type === 'expense' ? '支出' : '收入'} · {(()=>{const selected=categories.find((c)=>c.id===draft.categoryId);const parent=selected?.parentId?categories.find((c)=>c.id===selected.parentId):undefined;return parent?`${parent.name} · ${selected?.name}`:selected?.name})()}</span><strong>¥{(draft.amountMinor / 100).toFixed(2)}</strong></div>
         <button className="entry-next" disabled={saving} onClick={save}>{saving ? '保存中…' : initial && !copy ? '保存修改' : '保存'}</button>
       </section>}
     </main>

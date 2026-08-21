@@ -18,6 +18,8 @@ export interface Category {
   type: TransactionType
   name: string
   icon: string
+  color: string
+  parentId?: string
   sortOrder: number
   archived: boolean
   createdAt: number
@@ -33,7 +35,7 @@ export interface AppSettings {
 
 export interface BackupFile {
   format: 'yibi-ledger-backup'
-  version: 1
+  version: 1 | 2
   exportedAt: string
   transactions: Transaction[]
   categories: Category[]

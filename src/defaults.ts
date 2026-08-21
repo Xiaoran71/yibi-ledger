@@ -1,29 +1,33 @@
 import type { Category, TransactionType } from './types'
 
-const categorySeeds: Array<[TransactionType, string, string]> = [
-  ['expense', '餐饮', 'fork'],
-  ['expense', '交通', 'bus'],
-  ['expense', '购物', 'bag'],
-  ['expense', '居住', 'house'],
-  ['expense', '娱乐', 'sparkles'],
-  ['expense', '医疗', 'cross'],
-  ['expense', '学习', 'book'],
-  ['expense', '其他', 'ellipsis'],
-  ['income', '工资', 'briefcase'],
-  ['income', '奖金', 'gift'],
-  ['income', '兼职', 'laptop'],
-  ['income', '理财', 'chart'],
-  ['income', '红包', 'heart'],
-  ['income', '其他', 'ellipsis'],
+export const expenseColors = ['#B8685A','#CE8272','#D99B76','#C99465','#A9786D','#B38691','#8C8496','#A6A09A']
+export const incomeColors = ['#2F6F57','#4F8770','#6E9E89','#88AC99','#5D8D91','#7697A3','#829986','#A1AEA5']
+
+const categorySeeds: Array<[TransactionType, string, string, string]> = [
+  ['expense', '餐饮', 'fork', expenseColors[0]],
+  ['expense', '交通', 'bus', expenseColors[1]],
+  ['expense', '购物', 'bag', expenseColors[2]],
+  ['expense', '居住', 'house', expenseColors[3]],
+  ['expense', '娱乐', 'sparkles', expenseColors[4]],
+  ['expense', '医疗', 'cross', expenseColors[5]],
+  ['expense', '学习', 'book', expenseColors[6]],
+  ['expense', '其他', 'ellipsis', expenseColors[7]],
+  ['income', '工资', 'briefcase', incomeColors[0]],
+  ['income', '奖金', 'gift', incomeColors[1]],
+  ['income', '兼职', 'laptop', incomeColors[2]],
+  ['income', '理财', 'chart', incomeColors[3]],
+  ['income', '红包', 'heart', incomeColors[4]],
+  ['income', '其他', 'ellipsis', incomeColors[5]],
 ]
 
 export function createDefaultCategories(now = Date.now()): Category[] {
   const counters: Record<TransactionType, number> = { expense: 0, income: 0 }
-  return categorySeeds.map(([type, name, icon]) => ({
+  return categorySeeds.map(([type, name, icon, color]) => ({
     id: crypto.randomUUID(),
     type,
     name,
     icon,
+    color,
     sortOrder: counters[type]++,
     archived: false,
     createdAt: now,
