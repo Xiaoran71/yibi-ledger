@@ -5,14 +5,25 @@ import { formatAmountOnly, formatMoney, monthKey } from './utils'
 
 type ChartItem = { id: string; name: string; value: number; color: string }
 
-function RingChart({ data, onSelect }: { data: ChartItem[]; onSelect?: (id:string)=>void }) {
+function RingChart({ data, onSelect, callouts }: { data: ChartItem[]; onSelect?: (id:string)=>void; callouts: boolean }) {
   const total = data.reduce((sum, item) => sum + item.value, 0)
+  const segments = data.map((item) => ({ ...item, size: total ? item.value / total * 100 : 0 })).map((item, index, rows) => ({ ...item, offset: rows.slice(0,index).reduce((sum,row)=>sum+row.size,0) }))
+  if (callouts) {
+    const positioned = segments.map((item) => { const angle=(item.offset+item.size/2)/100*Math.PI*2-Math.PI/2;return {...item,right:Math.cos(angle)>=0,startX:60+Math.cos(angle)*30,startY:50+Math.sin(angle)*30,rawY:50+Math.sin(angle)*38} })
+    for (const right of [false,true]) {
+      const side=positioned.filter((item)=>item.right===right).sort((a,b)=>a.rawY-b.rawY)
+      const gap=Math.min(11,76/Math.max(side.length-1,1));let previous=12-gap
+      side.forEach((item)=>{item.rawY=Math.max(12,Math.min(88,item.rawY),previous+gap);previous=item.rawY})
+      const overflow=(side.at(-1)?.rawY??0)-88;if(overflow>0)side.forEach((item)=>item.rawY-=overflow)
+    }
+    return <div className="ring-wrap callouts"><svg viewBox="0 0 120 100" className="ring-chart callout-chart"><circle cx="60" cy="50" r="25" fill="none" stroke="#ececea" strokeWidth="8"/><g transform="rotate(-90 60 50)">{segments.map((item)=><circle className={onSelect?'selectable':''} role={onSelect?'button':undefined} aria-label={onSelect?`查看${item.name}的二级分类`:undefined} onClick={()=>onSelect?.(item.id)} key={item.id} cx="60" cy="50" r="25" fill="none" stroke={item.color} strokeWidth="8" strokeDasharray={`${item.size} ${100-item.size}`} strokeDashoffset={-item.offset} pathLength="100"/>)}</g>{positioned.map((item)=><g className="chart-callout" key={`${item.id}-label`}><polyline points={`${item.startX},${item.startY} ${item.right?91:29},${item.rawY} ${item.right?94:26},${item.rawY}`} stroke={item.color}/><circle cx={item.startX} cy={item.startY} r="1" fill={item.color}/><text x={item.right?97:23} y={item.rawY+1.8} textAnchor={item.right?'start':'end'}>{item.name}</text></g>)}</svg><div><strong>{data.length}</strong><span>个分类</span></div></div>
+  }
   let offset = 0
   return <div className="ring-wrap"><svg viewBox="0 0 42 42" className="ring-chart"><circle cx="21" cy="21" r="15.9" fill="none" stroke="#ececea" strokeWidth="5"/>{data.map((item) => { const size = total ? item.value / total * 100 : 0; const node = <circle className={onSelect?'selectable':''} role={onSelect?'button':undefined} aria-label={onSelect?`查看${item.name}的二级分类`:undefined} onClick={()=>onSelect?.(item.id)} key={item.id} cx="21" cy="21" r="15.9" fill="none" stroke={item.color} strokeWidth="5" strokeDasharray={`${size} ${100-size}`} strokeDashoffset={-offset} pathLength="100"/>; offset += size; return node })}</svg><div><strong>{data.length}</strong><span>个分类</span></div></div>
 }
 
 function Composition({ title, type, items, categories }: { title: string; type: TransactionType; items: Transaction[]; categories: Category[] }) {
-  const [legendOpen,setLegendOpen]=useState(false)
+  const [calloutsOpen,setCalloutsOpen]=useState(false)
   const [selectedParent,setSelectedParent]=useState<string>()
   const [allSecondary,setAllSecondary]=useState(false)
   const categoryMap=new Map(categories.map((c)=>[c.id,c]))
@@ -27,10 +38,10 @@ function Composition({ title, type, items, categories }: { title: string; type: 
   const data=selectedParent||allSecondary?secondary:primary
   const total=data.reduce((sum,item)=>sum+item.value,0)
   const canShowSecondary=categories.some((c)=>c.type===type&&c.parentId)
-  const drill=(id:string)=>{if(!selectedParent&&!allSecondary&&categories.some((c)=>c.parentId===id)){setSelectedParent(id);setLegendOpen(true)}}
+  const drill=(id:string)=>{if(!selectedParent&&!allSecondary&&categories.some((c)=>c.parentId===id))setSelectedParent(id)}
   const heading=selectedParent?`${categoryMap.get(selectedParent)?.name??''} · 二级分类`:allSecondary?'全部二级分类':title
   if (!total) return <section className="stats-card"><div className="stats-card-title"><h3>{heading}</h3></div><p className="muted">这个时期还没有数据</p></section>
-  return <section className="stats-card"><div className="stats-card-title"><h3>{heading}</h3><button className={legendOpen?'legend-toggle open':'legend-toggle'} onClick={()=>setLegendOpen(!legendOpen)} aria-label={legendOpen?'隐藏分类标注':'显示分类标注'}><Icon name="plus" size={16}/></button></div>{canShowSecondary&&<div className="chart-view-actions">{(selectedParent||allSecondary)&&<button onClick={()=>{setSelectedParent(undefined);setAllSecondary(false)}}>一级分类</button>}<button className={allSecondary?'active':''} onClick={()=>{setSelectedParent(undefined);setAllSecondary(!allSecondary);setLegendOpen(true)}}>全部二级</button></div>}<div className={legendOpen?'composition':'composition legend-hidden'}><RingChart data={data} onSelect={!selectedParent&&!allSecondary?drill:undefined}/>{legendOpen&&<div className="legend">{data.map((item)=>{const canDrill=!selectedParent&&!allSecondary&&categories.some((c)=>c.parentId===item.id);return <button disabled={!canDrill} onClick={()=>canDrill&&drill(item.id)} key={item.id}><i style={{background:item.color}}/><span>{item.name}</span><strong>{Math.round(item.value/total*100)}%</strong></button>})}</div>}</div>{!selectedParent&&!allSecondary&&canShowSecondary&&<p className="chart-hint">点按有二级分类的扇区或名称可查看明细</p>}</section>
+  return <section className="stats-card"><div className="stats-card-title"><h3>{heading}</h3><button className={calloutsOpen?'legend-toggle open':'legend-toggle'} onClick={()=>setCalloutsOpen(!calloutsOpen)} aria-label={calloutsOpen?'隐藏饼图分类标注':'显示饼图分类标注'}><Icon name="plus" size={16}/></button></div>{canShowSecondary&&<div className="chart-view-actions">{(selectedParent||allSecondary)&&<button onClick={()=>{setSelectedParent(undefined);setAllSecondary(false)}}>一级分类</button>}<button className={allSecondary?'active':''} onClick={()=>{setSelectedParent(undefined);setAllSecondary(!allSecondary)}}>全部二级</button></div>}<div className={calloutsOpen?'composition callouts-open':'composition'}><RingChart data={data} onSelect={!selectedParent&&!allSecondary?drill:undefined} callouts={calloutsOpen}/><div className="legend">{data.map((item)=>{const canDrill=!selectedParent&&!allSecondary&&categories.some((c)=>c.parentId===item.id);return <button disabled={!canDrill} onClick={()=>canDrill&&drill(item.id)} key={item.id}><i style={{background:item.color}}/><span>{item.name}</span><strong>{Math.round(item.value/total*100)}%</strong></button>})}</div></div>{!selectedParent&&!allSecondary&&canShowSecondary&&<p className="chart-hint">点按有二级分类的扇区或名称可查看明细</p>}</section>
 }
 
 export function StatisticsPage({ transactions, categories }: { transactions: Transaction[]; categories: Category[] }) {
