@@ -11,11 +11,11 @@
 .stats-card-title h3{margin:0}
 .legend-toggle{width:30px;height:30px;margin:-7px -7px 0 0;border:0;background:transparent;color:#a6a8a2;display:grid;place-items:center;border-radius:50%}
 .legend-toggle.open svg{transform:rotate(45deg)}
+.legend-toggle:focus-visible{outline:none}
 .chart-view-actions{display:flex;gap:7px;margin:8px 0 4px}
 .chart-view-actions button{border:0;background:#f0f0ed;color:var(--muted);border-radius:14px;padding:5px 9px;font-size:10px}
 .chart-view-actions button.active{background:var(--green-soft);color:var(--green)}
 .composition{margin-top:9px}
-.composition.legend-hidden{justify-content:center}
 .ring-chart circle{transition:opacity .15s}
 .ring-chart circle.selectable{cursor:pointer}
 .ring-chart circle.selectable:active{opacity:.72}
@@ -44,3 +44,8 @@
 .legend>button:not(:disabled):active{opacity:.55}
 .legend>button i{width:8px;height:8px;border-radius:3px}
 .legend>button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ring-wrap.callouts{width:190px;height:158px;margin-left:-9px}
+.callout-chart{transform:none}
+.chart-callout polyline{fill:none;stroke-width:.65;stroke-linecap:round;stroke-linejoin:round}
+.chart-callout text{fill:#696c66;font-size:5.2px;font-weight:600;letter-spacing:-.1px}
+.composition.callouts-open{gap:10px}
